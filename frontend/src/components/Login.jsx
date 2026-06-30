@@ -221,10 +221,10 @@ export default function Login({ onAuthSuccess }) {
               </label>
               <input
                 id="password"
-                type="password"
+                type="text"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder=""
                 className="w-full px-4 py-3 bg-[#161618] border border-white/10 rounded-xl text-white placeholder:text-white/20 focus:ring-2 focus:ring-[#ffb0c8]/20 focus:border-[#ffb0c8] transition-all outline-none"
                 disabled={loading}
               />
