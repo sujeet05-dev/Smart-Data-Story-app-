@@ -4,6 +4,8 @@ Loads environment variables and defines application settings.
 """
 
 import os
+import secrets
+import warnings
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -34,3 +36,21 @@ CORS_ORIGINS = ["http://localhost:3000", "http://localhost:5173", "http://127.0.
 LLM_MODEL = "gemini-2.0-flash"
 LLM_TEMPERATURE = 0.3
 LLM_MAX_TOKENS = 4096
+
+# --- Database ---
+DATABASE_PATH = BASE_DIR / "data.db"
+DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
+
+# --- JWT Authentication ---
+_jwt_env = os.getenv("JWT_SECRET_KEY", "")
+if not _jwt_env:
+    warnings.warn(
+        "JWT_SECRET_KEY not set in .env — using auto-generated key. "
+        "All user sessions will be invalidated on server restart. "
+        "Set JWT_SECRET_KEY in your .env file for persistent sessions.",
+        stacklevel=1,
+    )
+    _jwt_env = secrets.token_hex(32)
+JWT_SECRET_KEY = _jwt_env
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRE_HOURS = int(os.getenv("JWT_EXPIRE_HOURS", 24))

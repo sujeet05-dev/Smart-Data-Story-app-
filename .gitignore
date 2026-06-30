@@ -37,3 +37,12 @@ backend/sample_data/*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Database & Reports
+backend/data.db
+backend/reports/*
+
+# Design Portals
+stitch_datastoryai_login_portal*/
+
+

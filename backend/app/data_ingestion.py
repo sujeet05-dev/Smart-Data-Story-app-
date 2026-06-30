@@ -12,6 +12,10 @@ from typing import Tuple, Dict, List, Any
 
 from app.config import ALLOWED_EXTENSIONS, MAX_ROWS_FOR_PROCESSING
 
+# Simple cache for detect_column_types to avoid redundant computation
+# during a single analysis pipeline (called 5+ times per upload)
+_column_type_cache: Dict[str, Dict[str, List[str]]] = {}
+
 
 def validate_file(filename: str, file_size_bytes: int, max_mb: int = 200) -> Tuple[bool, str]:
     """Validate uploaded file by extension and size."""
@@ -55,7 +59,14 @@ def detect_column_types(df: pd.DataFrame) -> Dict[str, List[str]]:
     - categorical: object/category columns with limited unique values
     - datetime: columns parseable as dates
     - text: object columns with many unique values (likely free text)
+    
+    Results are cached per DataFrame (by id + shape) to avoid redundant
+    computation during the analysis pipeline.
     """
+    cache_key = f"{id(df)}_{df.shape}"
+    if cache_key in _column_type_cache:
+        return _column_type_cache[cache_key]
+
     numerical = []
     categorical = []
     datetime_cols = []
@@ -65,7 +76,7 @@ def detect_column_types(df: pd.DataFrame) -> Dict[str, List[str]]:
         # Try to parse as datetime
         if df[col].dtype == "object":
             try:
-                parsed = pd.to_datetime(df[col], infer_datetime_format=True, errors="coerce")
+                parsed = pd.to_datetime(df[col], errors="coerce")
                 if parsed.notna().sum() > len(df) * 0.5:
                     datetime_cols.append(col)
                     continue
@@ -84,12 +95,25 @@ def detect_column_types(df: pd.DataFrame) -> Dict[str, List[str]]:
             else:
                 text_cols.append(col)
 
-    return {
+    result = {
         "numerical": numerical,
         "categorical": categorical,
         "datetime": datetime_cols,
         "text": text_cols,
     }
+    _column_type_cache[cache_key] = result
+
+    # Keep cache small — evict oldest if > 10 entries
+    if len(_column_type_cache) > 10:
+        oldest_key = next(iter(_column_type_cache))
+        del _column_type_cache[oldest_key]
+
+    return result
+
+
+def clear_column_type_cache():
+    """Clear the column type detection cache."""
+    _column_type_cache.clear()
 
 
 def get_data_overview(df: pd.DataFrame) -> Dict[str, Any]:

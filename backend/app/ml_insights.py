@@ -59,7 +59,7 @@ def perform_clustering(df: pd.DataFrame, max_clusters: int = 6) -> Dict[str, Any
 
     inertias = []
     for k in range(2, max_k + 1):
-        km = KMeans(n_clusters=k, random_state=42, n_init=10, max_iter=300)
+        km = KMeans(n_clusters=k, random_state=42, n_init=5, max_iter=200)
         km.fit(scaled_data)
         inertias.append({"k": k, "inertia": round(float(km.inertia_), 2)})
 
@@ -73,7 +73,7 @@ def perform_clustering(df: pd.DataFrame, max_clusters: int = 6) -> Dict[str, Any
         optimal_k = 2
 
     # Final clustering with optimal k
-    km = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
+    km = KMeans(n_clusters=optimal_k, random_state=42, n_init=5)
     labels = km.fit_predict(scaled_data)
 
     # Get cluster profiles
@@ -131,7 +131,7 @@ def perform_regression(df: pd.DataFrame, target_col: Optional[str] = None) -> Di
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # Random Forest Regressor for feature importance
-    rf = RandomForestRegressor(n_estimators=100, random_state=42, max_depth=10, n_jobs=-1)
+    rf = RandomForestRegressor(n_estimators=50, random_state=42, max_depth=10, n_jobs=-1)
     rf.fit(X_train, y_train)
     y_pred = rf.predict(X_test)
 
@@ -200,7 +200,7 @@ def perform_classification(df: pd.DataFrame, target_col: Optional[str] = None) -
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y if len(np.unique(y)) > 1 else None)
 
-    rf = RandomForestClassifier(n_estimators=100, random_state=42, max_depth=10, n_jobs=-1)
+    rf = RandomForestClassifier(n_estimators=50, random_state=42, max_depth=10, n_jobs=-1)
     rf.fit(X_train, y_train)
     y_pred = rf.predict(X_test)
 
